@@ -1,6 +1,10 @@
 package br.com.alura.forum.controller;
 
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +17,12 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.alura.forum.bo.TopicBO;
 import br.com.alura.forum.controller.dto.input.TopicSearchInputDt0;
 import br.com.alura.forum.controller.dto.output.TopicBriefOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicDashBoardOutputDto;
+import br.com.alura.forum.controller.repository.CategoryRepository;
 import br.com.alura.forum.controller.repository.TopicRepository;
+import br.com.alura.forum.model.Category;
 import br.com.alura.forum.model.topic_domain.Topic;
 
 
@@ -27,6 +32,9 @@ public class TopicController {
 	
 	@Autowired
 	private TopicRepository topicRepository;
+	
+	@Autowired
+	private CategoryRepository categoryRepository;
 	
 	@GetMapping(value="/api/topics", produces=MediaType.APPLICATION_JSON_VALUE)
 	public Page<TopicBriefOutputDto> listTopics(TopicSearchInputDt0 topicSearchBuild, @PageableDefault(sort="creationInstant", direction=Sort.Direction.DESC) Pageable pageRequest){
@@ -50,9 +58,54 @@ public class TopicController {
 	
 	@GetMapping(value="/api/topics/dashboard", produces=MediaType.APPLICATION_JSON_VALUE)
 	public List<TopicDashBoardOutputDto> listTopicsDashBoard(){
-		 
-		TopicBO bo = new TopicBO();
-		
-		return bo.findAllCategory();
+		 		
+		return this.findAllCategory();
 	}
+	
+	private List<TopicDashBoardOutputDto> findAllCategory(){ 
+				
+		List<TopicDashBoardOutputDto> list = new ArrayList<>();
+		
+		List<Category> allCategory = categoryRepository.findAll();
+		
+		for (Category category : allCategory) {
+			List<Topic> topics = topicRepository.findAllCategory(category.getName());
+			
+			TopicDashBoardOutputDto topicDashBoardOutputDto = new TopicDashBoardOutputDto();
+			
+			topicDashBoardOutputDto.setCategoryName(category.getName());
+			
+			topicDashBoardOutputDto.setAllTopics((long) topics.size());			
+			
+			long unansweredTopics = 0;
+			long lastWeekTopics = 0;
+			
+			for (Topic topic : topics) {
+				topicDashBoardOutputDto.getSubcategories().add(topic.getCourse().getSubcategory().getName());
+				
+				if( topic.getAnswers().isEmpty() )
+					unansweredTopics++;
+				
+				
+				if( isLastWeek( topic.getCreationInstant() ) )
+					lastWeekTopics++;
+			}		
+			
+			topicDashBoardOutputDto.setUnansweredTopics(unansweredTopics);
+			topicDashBoardOutputDto.setLastWeekTopics(lastWeekTopics);
+			
+			list.add(topicDashBoardOutputDto);
+		}
+		
+		return list;
+	}
+	
+	private boolean isLastWeek(Instant createInstant) {
+		LocalDateTime localDateTime = LocalDateTime.ofInstant(createInstant, ZoneOffset.UTC);
+		
+		int valor = 7 - localDateTime.getDayOfWeek().getValue();
+		
+		return false;
+	}
+
 }

@@ -1,12 +1,11 @@
 package br.com.alura.forum.controller.dto.output;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import br.com.alura.forum.model.Category;
 
 public class TopicDashBoardOutputDto {
 	private String categoryName;
-	private List<Category> subcategories;
+	private List<String> subcategories = new ArrayList<>();
 	private Long allTopics;
 	private Long lastWeekTopics;
 	private Long unansweredTopics;
@@ -21,10 +20,10 @@ public class TopicDashBoardOutputDto {
 	public void setCategoryName(String categoryName) {
 		this.categoryName = categoryName;
 	}
-	public List<Category> getSubcategories() {
+	public List<String> getSubcategories() {
 		return subcategories;
 	}
-	public void setSubcategories(List<Category> subcategories) {
+	public void setSubcategories(List<String> subcategories) {
 		this.subcategories = subcategories;
 	}
 	public Long getAllTopics() {
