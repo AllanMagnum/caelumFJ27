@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  backend:
+    image: forum
+    environment:
+    - DB_HOST=db
+    - DB_PORT=3306
+    - DB_USER=root
+    - DB_PASSWORD=
+    networks:
+    - nw-forum
+    ports:
+    - "8080:8080"
+    depends_on:
+    - db
+    restart: on-failure
+  db:
+    image: mysql:5.7
+    environment:
+    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+    - storage_db:/var/lib/mysql
+    networks:
+    - nw-forum
+
+networks:
+  nw-forum:
+
+volumes:
+  storage_db:
