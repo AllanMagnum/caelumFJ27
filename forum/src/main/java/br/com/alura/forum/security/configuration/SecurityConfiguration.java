@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import br.com.alura.forum.security.service.UsersService;
@@ -19,7 +20,16 @@ public class SecurityConfiguration  extends WebSecurityConfigurerAdapter{
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/api/topics/**").permitAll().anyRequest().authenticated().and().cors().and().formLogin();
+		//http.authorizeRequests().antMatchers("/api/topics/**").permitAll().anyRequest().authenticated().and().cors().and().formLogin();
+		
+		http.authorizeRequests()
+					.antMatchers("/api/topics/**").permitAll()
+					.antMatchers("/api/auth/**").permitAll()
+					.anyRequest().authenticated()
+					.and().cors()
+					.and().csrf().disable()
+					.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}
 
 	@Override
