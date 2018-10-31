@@ -18,4 +18,5 @@ public interface TopicRepository extends Repository<Topic, Long>, JpaSpecificati
 
 	@Query("select t from Topic t Join Fetch t.course c where c.subcategory.category.name = :categoryName")
 	List<Topic> findAllCategory(@Param(value = "categoryName") String categoryName);
+	
 }
