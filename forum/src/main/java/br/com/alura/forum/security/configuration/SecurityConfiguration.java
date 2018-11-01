@@ -2,12 +2,13 @@ package br.com.alura.forum.security.configuration;
 
 import java.io.IOException;
 
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.hibernate.annotations.common.util.impl.LoggerFactory;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,13 +34,14 @@ import br.com.alura.forum.security.service.UsersService;
 public class SecurityConfiguration  extends WebSecurityConfigurerAdapter{
 	
 	private static class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint{
-		private static final Logger logger = LoggerFactory.logger(JwtAuthenticationEntryPoint.class);
+		
+		Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
 		@Override
 		public void commence(HttpServletRequest arg0, HttpServletResponse response, AuthenticationException authException)
 				throws IOException, ServletException {
 			
-			logger.error("Um acesso não autorizado foi verificado. Mensagem:{}", authException.getMessage(), null);
+			logger.error("Um acesso não autorizado foi verificado. Mensagem: {}", authException.getMessage());
 			
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Você não está autorizado a acessar esse recurso.");
 			

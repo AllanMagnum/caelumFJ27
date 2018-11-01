@@ -53,11 +53,10 @@ public class Topic {
 	/**
 	 * @deprecated
 	 */
-	public Topic() {}
+	public Topic() {
+	}
 	
-	public Topic(Long id, String shortDescription, String content, User owner, Course course) {
-		super();
-		this.id = id;
+	public Topic( String shortDescription, String content, User owner, Course course) {
 		this.shortDescription = shortDescription;
 		this.content = content;
 		this.owner = owner;
