@@ -2,7 +2,6 @@ package br.com.alura.forum.security.configuration;
 
 import java.io.IOException;
 
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -58,8 +58,9 @@ public class SecurityConfiguration  extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 		//http.authorizeRequests().antMatchers("/api/topics/**").permitAll().anyRequest().authenticated().and().cors().and().formLogin();
 		
-		http.authorizeRequests()
-					.antMatchers("/api/topics/**").permitAll()
+		http.antMatcher("/api/**")
+					.authorizeRequests()
+					.antMatchers(HttpMethod.GET,"/api/topics/**").permitAll()
 					.antMatchers("/api/auth/**").permitAll()
 					.anyRequest().authenticated()
 					.and().cors()
@@ -85,7 +86,7 @@ public class SecurityConfiguration  extends WebSecurityConfigurerAdapter{
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/**.html", "/v2/api-docs", "/webjars/**", "/configuration/**", "/swagger-resources/**");
+		web.ignoring().antMatchers("/**.html", "/v2/api-docs", "/webjars/**", "/configuration/**", "/swagger-resources/**", "/api/auth/**", "/api/auth/");
 	}
 	
 }

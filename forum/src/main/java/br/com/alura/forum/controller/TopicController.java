@@ -153,20 +153,6 @@ public class TopicController {
 		return topic.map(t -> ResponseEntity.ok(new TopicAnswerOutputDto(t))).orElse(ResponseEntity.notFound().build());
 	}
 	
-	@PostMapping(value="/api/topics/{id}/answer", consumes=MediaType.APPLICATION_JSON_VALUE ,produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> createAnswer(@PathVariable("id") Long id, @RequestBody AnswerInputDto inputDto, @AuthenticationPrincipal User loggerUser, UriComponentsBuilder uriBuilder){
-		
-		Optional<Topic> topic = topicRepository.findById(id);
-		
-		Answer answer = new Answer(inputDto.getContent(), topic.get(), loggerUser);
-		
-		Answer answerSaved = answerRepository.save(answer);
-		
-		AnswerDto outputDto = new AnswerDto(answerSaved); 
-		
-		return ResponseEntity.ok(outputDto);
-	}
-	
 	private boolean isLastWeek(Instant createInstant) {
 		LocalDateTime localDateTime = LocalDateTime.ofInstant(createInstant, ZoneOffset.UTC);
 		
