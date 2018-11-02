@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -19,23 +20,32 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import br.com.alura.forum.controller.dto.AnswerDto;
+import br.com.alura.forum.controller.dto.input.AnswerInputDto;
 import br.com.alura.forum.controller.dto.input.NewTopicInputDto;
 import br.com.alura.forum.controller.dto.input.TopicSearchInputDt0;
+import br.com.alura.forum.controller.dto.output.TopicAnswerOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicBriefOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicDashBoardOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicOutputDto;
+import br.com.alura.forum.controller.repository.AnswerRepository;
 import br.com.alura.forum.controller.repository.CategoryRepository;
 import br.com.alura.forum.controller.repository.CourseRepository;
 import br.com.alura.forum.controller.repository.TopicRepository;
+import br.com.alura.forum.model.Answer;
 import br.com.alura.forum.model.Category;
 import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic_domain.Topic;
+import br.com.alura.forum.validator.NewTopicCustomValidator;
 
 
 @RestController
@@ -49,7 +59,10 @@ public class TopicController {
 	private CategoryRepository categoryRepository;
 	
 	@Autowired
-	private CourseRepository coursrRepository;
+	private CourseRepository courseRepository;
+	
+	@Autowired
+	private AnswerRepository answerRepository;
 	
 	@GetMapping(value="/api/topics", produces=MediaType.APPLICATION_JSON_VALUE)
 	public Page<TopicBriefOutputDto> listTopics(TopicSearchInputDt0 topicSearchBuild, @PageableDefault(sort="creationInstant", direction=Sort.Direction.DESC) Pageable pageRequest){
@@ -115,10 +128,10 @@ public class TopicController {
 		return list;
 	}
 	
-	@PostMapping(consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value="/api/topics", consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<TopicOutputDto> createTopic(@RequestBody @Valid NewTopicInputDto inputDto, @AuthenticationPrincipal User loggerUser, UriComponentsBuilder uriBuilder){
 		
-		Topic topic = inputDto.build(loggerUser, this.coursrRepository);
+		Topic topic = inputDto.build(loggerUser, this.courseRepository);
 		
 		this.topicRepository.save(topic);
 		 
@@ -127,12 +140,44 @@ public class TopicController {
 		return ResponseEntity.created(path).body( new TopicOutputDto(topic) );
 	}
 	
+	@GetMapping(value="/api/topics/{id}", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> listTopicAnswer(@PathVariable("id") Long id){
+		TopicAnswerOutputDto outputDto;
+		
+		Optional<Topic> topic = topicRepository.findById(id);
+		
+		//Topic topicFound = topic.orElseThrow(() -> new IllegalArgumentException());
+		
+		//return ResponseEntity.ok(new TopicAnswerOutputDto(topicFound));
+		
+		return topic.map(t -> ResponseEntity.ok(new TopicAnswerOutputDto(t))).orElse(ResponseEntity.notFound().build());
+	}
+	
+	@PostMapping(value="/api/topics/{id}/answer", consumes=MediaType.APPLICATION_JSON_VALUE ,produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> createAnswer(@PathVariable("id") Long id, @RequestBody AnswerInputDto inputDto, @AuthenticationPrincipal User loggerUser, UriComponentsBuilder uriBuilder){
+		
+		Optional<Topic> topic = topicRepository.findById(id);
+		
+		Answer answer = new Answer(inputDto.getContent(), topic.get(), loggerUser);
+		
+		Answer answerSaved = answerRepository.save(answer);
+		
+		AnswerDto outputDto = new AnswerDto(answerSaved); 
+		
+		return ResponseEntity.ok(outputDto);
+	}
+	
 	private boolean isLastWeek(Instant createInstant) {
 		LocalDateTime localDateTime = LocalDateTime.ofInstant(createInstant, ZoneOffset.UTC);
 		
 		int valor = 7 - localDateTime.getDayOfWeek().getValue();
 		
 		return false;
+	}
+	
+	@InitBinder("newTopicInputDto")
+	public void intiBinder(WebDataBinder binder, @AuthenticationPrincipal User loggedUSer){
+		binder.addValidators(new NewTopicCustomValidator(this.topicRepository, loggedUSer));
 	}
 
 }
